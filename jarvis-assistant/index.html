@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S. // System Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Sci-fi and clean UI fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="crt-grid"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="sys-header">
+            <div class="header-left">
+                <div class="logo-box">
+                    <span class="logo-dot pulse-slow"></span>
+                    <span class="logo-text">SYS.JARVIS // STARK.ENT</span>
+                </div>
+                <div class="sys-title-sub">NEURAL NODE V3.5</div>
+            </div>
+            <div class="header-center">
+                <div class="sys-status">
+                    <span class="status-label">SYS_STATUS:</span>
+                    <span class="status-value status-active" id="sys-status-text">ONLINE</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="sys-time" id="sys-time">00:00:00</div>
+                <div class="sys-date" id="sys-date">00.00.0000</div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT GRID -->
+        <main class="sys-grid">
+            
+            <!-- LEFT COLUMN: DIAGNOSTICS & SYSTEM STATUS -->
+            <section class="grid-panel panel-left" id="panel-diagnostics">
+                <div class="panel-header">
+                    <span class="panel-title">SYSTEM DIAGNOSTICS</span>
+                    <span class="panel-subtitle">Vocal & Hardware Status</span>
+                </div>
+                <div class="panel-content">
+                    <div class="diag-group">
+                        <div class="diag-item">
+                            <span class="diag-label">CORE TEMPERATURE</span>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar temp-bar" id="cpu-temp-bar" style="width: 42%"></div>
+                            </div>
+                            <span class="diag-value" id="cpu-temp-val">42°C</span>
+                        </div>
+                        <div class="diag-item">
+                            <span class="diag-label">MEMORY ALLOCATION</span>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar mem-bar" id="ram-usage-bar" style="width: 28%"></div>
+                            </div>
+                            <span class="diag-value" id="ram-usage-val">28%</span>
+                        </div>
+                        <div class="diag-item">
+                            <span class="diag-label">NEURAL NETWORK LINK</span>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar link-bar" id="link-status-bar" style="width: 100%"></div>
+                            </div>
+                            <span class="diag-value" id="link-status-val">LOCAL SYNCED</span>
+                        </div>
+                    </div>
+
+                    <div class="diag-grid-stats">
+                        <div class="stat-box">
+                            <div class="stat-num" id="stat-latency">12ms</div>
+                            <div class="stat-label">LATENCY</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-num" id="stat-uptime">00:00</div>
+                            <div class="stat-label">UPTIME</div>
+                        </div>
+                    </div>
+
+                    <div class="audio-waves-container">
+                        <div class="wave-header">SPEECH CAPTURE INDEX</div>
+                        <div class="audio-waves" id="audio-wave-bars">
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CENTER COLUMN: THE ARC REACTOR -->
+            <section class="grid-panel panel-center">
+                <div class="reactor-wrapper">
+                    <!-- Rotating rings -->
+                    <button class="reactor-core-btn" id="reactor-trigger" aria-label="Toggle Jarvis Voice Assistant">
+                        <div class="reactor-ring outer-ring"></div>
+                        <div class="reactor-ring middle-ring"></div>
+                        <div class="reactor-ring inner-ring"></div>
+                        <div class="reactor-center">
+                            <div class="reactor-glow"></div>
+                        </div>
+                    </button>
+                    <div class="reactor-caption">
+                        <div class="reactor-status-heading" id="reactor-status-msg">STANDBY</div>
+                        <div class="reactor-hint">CLICK CORE OR PRESS "SPACE" TO INITIATE VOICE SYNAPSE</div>
+                    </div>
+                    <!-- Restore Button (Visible in Compact Mode only) -->
+                    <button class="restore-btn" id="restore-trigger" title="Restore Dashboard Layout">⤢ Restore HUD</button>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: TERMINAL CONSOLE & CHAT LOG -->
+            <section class="grid-panel panel-right" id="panel-console">
+                <div class="panel-header">
+                    <span class="panel-title">TERMINAL CONSOLE</span>
+                    <div class="panel-controls">
+                        <button class="settings-btn" id="settings-trigger" title="Open System Settings">⚙ Settings</button>
+                        <button class="settings-btn" id="minimize-trigger" title="Minimize HUD to Floating Dot">⚬ Dot Mode</button>
+                    </div>
+                </div>
+                <div class="console-body" id="console-logs">
+                    <!-- Logs will be inserted dynamically by JS -->
+                    <div class="log-entry log-system">[023:22:46] SYSTEM: INITIALIZING NEURAL CORE SHELL...</div>
+                    <div class="log-entry log-system">[023:22:47] SYSTEM: VOICE SYNAPSE STANDBY. SAPI5 DRIVER INTEGRATED.</div>
+                    <div class="log-entry log-info">[023:22:47] J.A.R.V.I.S.: "Welcome back, Sir. Ready to assist."</div>
+                </div>
+                <div class="console-input-area">
+                    <span class="prompt-symbol">$</span>
+                    <input type="text" id="console-input" placeholder="Enter manual command or type here..." autocomplete="off">
+                    <button id="console-send-btn" class="send-btn">SEND</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content">
+            <h2 class="modal-title">J.A.R.V.I.S. COGNITIVE INTERFACE CONFIG</h2>
+            <p class="modal-desc">Configure the LLM connection to enable advanced, conversational intelligence.</p>
+            
+            <div class="form-group">
+                <label for="api-key-input" class="form-label">GROQ API KEY</label>
+                <input type="password" id="api-key-input" class="form-input" placeholder="gsk_...">
+                <div class="form-help">
+                    Your key is saved locally in your browser's <code class="code-highlight">localStorage</code> and is sent directly to Groq's API servers.
+                    Get a key from the <a href="https://console.groq.com/" target="_blank" class="form-link">Groq Console</a>.
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="model-select" class="form-label">COGNITIVE MODEL SELECTOR</label>
+                <select id="model-select" class="form-input">
+                    <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Highly Recommended)</option>
+                    <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Fastest Response)</option>
+                    <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 (High context logic)</option>
+                </select>
+                <div class="form-help">Select the active LLM processing core.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="voice-select" class="form-label">VOICE SELECTOR</label>
+                <select id="voice-select" class="form-input">
+                    <!-- Will be populated by JS -->
+                    <option value="">Detecting system voices...</option>
+                </select>
+                <div class="form-help">Select the voice synthesis output (English male voices are recommended to simulate Jarvis).</div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn btn-cancel" id="settings-cancel">CLOSE</button>
+                <button class="modal-btn btn-save" id="settings-save">SAVE PROFILE</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
