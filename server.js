@@ -126,6 +126,18 @@ const server = http.createServer((req, res) => {
                     const sanitizedParam = param.toLowerCase().trim().replace(/[^a-zA-Z0-9\s\-_:]/g, '');
                     const executableName = APP_ALIASES[sanitizedParam] || sanitizedParam;
 
+                    // The hosted preview runs in Linux and cannot launch a Windows desktop app.
+                    // The browser handles camera access locally; do not invoke a failing shell fallback.
+                    if (sanitizedParam === 'camera' || sanitizedParam === 'webcam') {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            success: true,
+                            handledBy: 'browser',
+                            message: 'Camera access is handled by the browser on the local device.'
+                        }));
+                        return;
+                    }
+
                     console.log(`[SYS EXEC] Launching app: ${executableName} on ${process.platform}`);
                     runCommand = callback => launchApplication(executableName, callback);
                 } else {

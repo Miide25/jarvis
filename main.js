@@ -463,6 +463,45 @@ function getOfflineFallback(prompt) {
 }
 
 // --- SYSTEM HARDWARE CONTROL API ---
+async function openCameraInBrowser() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        addLog('Camera access is not supported by this browser.', 'error');
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const existingPanel = document.getElementById('jarvis-camera-panel');
+        existingPanel?.remove();
+
+        const panel = document.createElement('section');
+        panel.id = 'jarvis-camera-panel';
+        panel.setAttribute('aria-label', 'Camera preview');
+        panel.style.cssText = 'position:fixed;right:24px;bottom:24px;z-index:9999;width:min(420px,calc(100vw - 48px));padding:12px;background:#101820;border:1px solid #39d9ff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);';
+
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.playsInline = true;
+        video.srcObject = stream;
+        video.style.cssText = 'display:block;width:100%;border-radius:8px;transform:scaleX(-1);';
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.textContent = 'Close camera';
+        closeButton.style.cssText = 'display:block;margin:10px 0 0 auto;padding:8px 12px;border:1px solid #39d9ff;border-radius:6px;background:transparent;color:#d9f7ff;cursor:pointer;';
+        closeButton.addEventListener('click', () => {
+            stream.getTracks().forEach(track => track.stop());
+            panel.remove();
+        });
+
+        panel.append(video, closeButton);
+        document.body.appendChild(panel);
+        addLog('Camera preview opened in the browser, Sir.', 'system');
+    } catch (error) {
+        addLog(`Camera permission was not granted: ${error.message}`, 'error');
+    }
+}
+
 async function readApiResponse(response) {
     const contentType = response.headers.get('content-type') || '';
     const responseText = await response.text();
@@ -481,6 +520,12 @@ async function readApiResponse(response) {
 
 async function executeLaptopAction(action, param = null) {
     addLog(`Initiating system protocol for action: ${action} ${param ? `(${param})` : ''}...`, 'system');
+
+    // The preview/server runs in a separate Linux VM, so camera access must stay in the user's browser.
+    if (action === 'open_app' && ['camera', 'webcam'].includes((param || '').toLowerCase())) {
+        await openCameraInBrowser();
+        return;
+    }
     
     try {
         const payload = { action: action };
