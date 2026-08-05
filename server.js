@@ -5,7 +5,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
 
 const PORT = 3000;
 
@@ -27,6 +27,11 @@ const ALLOWED_SYSTEM_ACTIONS = {
 };
 
 // Aliases for common applications to system executables
+const WINDOWS_ONLY_APPS = new Set([
+    'notepad', 'calculator', 'calc', 'paint', 'mspaint', 'word', 'excel',
+    'powerpoint', 'explorer', 'file explorer', 'files', 'settings', 'camera'
+]);
+
 const APP_ALIASES = {
     'vs code': 'code',
     'vscode': 'code',
@@ -53,6 +58,25 @@ const APP_ALIASES = {
     'discord': 'discord',
     'steam': 'steam'
 };
+
+function launchApplication(executableName, callback) {
+    if (process.platform === 'win32') {
+        exec(`start "" "${executableName}"`, callback);
+        return;
+    }
+
+    if (process.platform === 'darwin') {
+        execFile('open', ['-a', executableName], callback);
+        return;
+    }
+
+    if (executableName.endsWith(':')) {
+        execFile('xdg-open', [executableName], callback);
+        return;
+    }
+
+    execFile(executableName, [], callback);
+}
 
 const server = http.createServer((req, res) => {
     // API endpoint: Local laptop automation control
@@ -84,7 +108,7 @@ const server = http.createServer((req, res) => {
                     return;
                 }
                 
-                let shellCommand = '';
+                let runCommand;
                 
                 if (action === 'open_app') {
                     if (!param) {
@@ -96,23 +120,32 @@ const server = http.createServer((req, res) => {
                     // Sanitize param to prevent command injection
                     const sanitizedParam = param.toLowerCase().trim().replace(/[^a-zA-Z0-9\s\-_:]/g, '');
                     const executableName = APP_ALIASES[sanitizedParam] || sanitizedParam;
+
+                    if (process.platform !== 'win32' && WINDOWS_ONLY_APPS.has(sanitizedParam)) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: `${sanitizedParam} is only available when the mainframe server runs on Windows.`
+                        }));
+                        return;
+                    }
                     
-                    // Use start to launch application
-                    shellCommand = `start ${executableName}`;
-                    console.log(`[SYS EXEC] Launching app: ${executableName} (via command: ${shellCommand})`);
+                    console.log(`[SYS EXEC] Launching app: ${executableName} on ${process.platform}`);
+                    runCommand = callback => launchApplication(executableName, callback);
                 } else {
-                    shellCommand = ALLOWED_SYSTEM_ACTIONS[action];
+                    const shellCommand = ALLOWED_SYSTEM_ACTIONS[action];
+                    if (shellCommand) {
+                        runCommand = callback => exec(shellCommand, callback);
+                    }
                 }
                 
-                if (!shellCommand) {
+                if (!runCommand) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: false, error: `Action '${action}' is not authorized or supported.` }));
                     return;
                 }
                 
-                console.log(`[SYS EXEC] Executing command: ${shellCommand}`);
-                
-                exec(shellCommand, (err, stdout, stderr) => {
+                runCommand((err, stdout, stderr) => {
                     if (err) {
                         console.error(`[SYS ERROR] Execution failed: ${err.message}`);
                         res.writeHead(500, { 'Content-Type': 'application/json' });
