@@ -26,12 +26,7 @@ const ALLOWED_SYSTEM_ACTIONS = {
     'volume_mute': 'powershell -Command "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"'
 };
 
-// Aliases for common applications to system executables
-const WINDOWS_ONLY_APPS = new Set([
-    'notepad', 'calculator', 'calc', 'paint', 'mspaint', 'word', 'excel',
-    'powerpoint', 'explorer', 'file explorer', 'files', 'settings', 'camera'
-]);
-
+// Aliases for common applications to system executables and URI handlers
 const APP_ALIASES = {
     'vs code': 'code',
     'vscode': 'code',
@@ -61,12 +56,22 @@ const APP_ALIASES = {
 
 function launchApplication(executableName, callback) {
     if (process.platform === 'win32') {
-        exec(`start "" "${executableName}"`, callback);
+        // `start` is a cmd built-in and must receive an empty title before the URI.
+        execFile('cmd.exe', ['/d', '/s', '/c', `start "" "${executableName}"`], callback);
         return;
     }
 
     if (process.platform === 'darwin') {
+        if (executableName === 'microsoft.windows.camera:') {
+            execFile('open', ['-a', 'Photo Booth'], callback);
+            return;
+        }
         execFile('open', ['-a', executableName], callback);
+        return;
+    }
+
+    if (executableName === 'microsoft.windows.camera:') {
+        execFile('sh', ['-c', 'if command -v cheese >/dev/null; then exec cheese; elif command -v guvcview >/dev/null; then exec guvcview; elif command -v xdg-open >/dev/null; then exec xdg-open v4l2:///dev/video0; else exit 127; fi'], callback);
         return;
     }
 
@@ -121,15 +126,6 @@ const server = http.createServer((req, res) => {
                     const sanitizedParam = param.toLowerCase().trim().replace(/[^a-zA-Z0-9\s\-_:]/g, '');
                     const executableName = APP_ALIASES[sanitizedParam] || sanitizedParam;
 
-                    if (process.platform !== 'win32' && WINDOWS_ONLY_APPS.has(sanitizedParam)) {
-                        res.writeHead(400, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({
-                            success: false,
-                            error: `${sanitizedParam} is only available when the mainframe server runs on Windows.`
-                        }));
-                        return;
-                    }
-                    
                     console.log(`[SYS EXEC] Launching app: ${executableName} on ${process.platform}`);
                     runCommand = callback => launchApplication(executableName, callback);
                 } else {
