@@ -56,6 +56,15 @@ const APP_ALIASES = {
 
 const server = http.createServer((req, res) => {
     // API endpoint: Local laptop automation control
+    if (req.url === '/api/execute' && req.method !== 'POST') {
+        res.writeHead(405, {
+            'Content-Type': 'application/json',
+            'Allow': 'POST'
+        });
+        res.end(JSON.stringify({ success: false, error: 'Method not allowed. Use POST.' }));
+        return;
+    }
+
     if (req.method === 'POST' && req.url === '/api/execute') {
         let body = '';
         

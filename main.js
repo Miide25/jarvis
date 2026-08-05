@@ -463,6 +463,22 @@ function getOfflineFallback(prompt) {
 }
 
 // --- SYSTEM HARDWARE CONTROL API ---
+async function readApiResponse(response) {
+    const contentType = response.headers.get('content-type') || '';
+    const responseText = await response.text();
+
+    if (!contentType.includes('application/json')) {
+        const preview = responseText.replace(/\s+/g, ' ').slice(0, 120);
+        throw new Error(`Mainframe returned HTTP ${response.status} instead of JSON${preview ? `: ${preview}` : ''}`);
+    }
+
+    try {
+        return JSON.parse(responseText);
+    } catch {
+        throw new Error(`Mainframe returned malformed JSON (HTTP ${response.status})`);
+    }
+}
+
 async function executeLaptopAction(action, param = null) {
     addLog(`Initiating system protocol for action: ${action} ${param ? `(${param})` : ''}...`, 'system');
     
@@ -473,17 +489,18 @@ async function executeLaptopAction(action, param = null) {
         const response = await fetch('/api/execute', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
+        const data = await readApiResponse(response);
         
         if (data.success) {
             addLog(`System protocol '${action}' completed successfully.`, 'system');
         } else {
-            addLog(`System protocol error: ${data.error}`, 'error');
+            addLog(`System protocol error: ${data.error || `HTTP ${response.status}`}`, 'error');
         }
     } catch (err) {
         addLog(`Mainframe connection error: ${err.message}`, 'error');
